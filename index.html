@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カレンダー選択</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+        .calendar-container {
+            margin-top: 20px;
+        }
+        .weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        .weekday {
+            text-align: center;
+            font-weight: bold;
+            padding: 5px;
+        }
+        .date-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        .date-item {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            min-height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .date-item.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        select {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        .nav-button {
+            padding: 5px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .nav-button:hover {
+            background-color: #45a049;
+        }
+        .options-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .option-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .option-button {
+            padding: 8px 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .option-button.selected {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .submit-button {
+            padding: 10px 30px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .submit-button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .submit-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .submit-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        .submit-button:active::after {
+            animation: ripple 0.6s ease-out;
+        }
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="nav-button" id="prevMonth">&lt;</button>
+            <select id="yearSelect"></select>
+            <select id="monthSelect"></select>
+            <button class="nav-button" id="nextMonth">&gt;</button>
+        </div>
+        <div class="calendar-container">
+            <div id="weekdayHeader" class="weekday-header"></div>
+            <div id="dateGrid" class="date-grid"></div>
+        </div>
+        <div class="options-container">
+            <div class="option-buttons">
+                <button class="option-button" data-type="1">休み</button>
+                <button class="option-button" data-type="2">レンタカー</button>
+                <button class="option-button" data-type="3">線路</button>
+            </div>
+            <button class="submit-button" id="submitButton">送信</button>
+        </div>
+    </div>
+
+    <script>
+        // 年の選択肢を生成
+        const yearSelect = document.getElementById('yearSelect');
+        const currentYear = new Date().getFullYear();
+        for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year + '年';
+            yearSelect.appendChild(option);
+        }
+        yearSelect.value = currentYear;
+
+        // 月の選択肢を生成
+        const monthSelect = document.getElementById('monthSelect');
+        for (let month = 1; month <= 12; month++) {
+            const option = document.createElement('option');
+            option.value = month;
+            option.textContent = month + '月';
+            monthSelect.appendChild(option);
+        }
+        monthSelect.value = new Date().getMonth() + 1;
+
+        // 曜日ヘッダーを生成
+        function createWeekdayHeader() {
+            const weekdayHeader = document.getElementById('weekdayHeader');
+            weekdayHeader.innerHTML = '';
+            const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+            weekdays.forEach(day => {
+                const weekdayElement = document.createElement('div');
+                weekdayElement.className = 'weekday';
+                weekdayElement.textContent = day;
+                weekdayHeader.appendChild(weekdayElement);
+            });
+        }
+
+        // 前月・次月ボタンの処理
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            let month = parseInt(monthSelect.value);
+            let year = parseInt(yearSelect.value);
+            
+            if (month === 1) {
+                month = 12;
+                year--;
+            } else {
+                month--;
+            }
+            
+            yearSelect.value = year;
+            monthSelect.value = month;
+            updateDateGrid();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            let month = parseInt(monthSelect.value);
+            let year = parseInt(yearSelect.value);
+            
+            if (month === 12) {
+                month = 1;
+                year++;
+            } else {
+                month++;
+            }
+            
+            yearSelect.value = year;
+            monthSelect.value = month;
+            updateDateGrid();
+        });
+
+        // 日付グリッドを更新する関数
+        function updateDateGrid() {
+            const year = parseInt(yearSelect.value);
+            const month = parseInt(monthSelect.value);
+            const dateGrid = document.getElementById('dateGrid');
+            dateGrid.innerHTML = '';
+
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const firstDay = new Date(year, month - 1, 1).getDay();
+
+            // 月初めの空きマスを追加
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                dateGrid.appendChild(emptyCell);
+            }
+
+            // 日付を追加
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateItem = document.createElement('div');
+                dateItem.className = 'date-item';
+                dateItem.textContent = day;
+                dateItem.addEventListener('click', () => {
+                    dateItem.classList.toggle('selected');
+                });
+                dateGrid.appendChild(dateItem);
+            }
+        }
+
+        // 年月が変更されたときに日付グリッドを更新
+        yearSelect.addEventListener('change', updateDateGrid);
+        monthSelect.addEventListener('change', updateDateGrid);
+
+        // オプションボタンの処理
+        const optionButtons = document.querySelectorAll('.option-button');
+        let selectedOption = null;
+
+        optionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                optionButtons.forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                selectedOption = button.dataset.type;
+            });
+        });
+
+        // 送信ボタンの処理
+        document.getElementById('submitButton').addEventListener('click', () => {
+            const selectedDates = Array.from(document.querySelectorAll('.date-item.selected'))
+                .map(item => item.textContent);
+            
+            if (selectedDates.length === 0) {
+                alert('日付を選択してください。');
+                return;
+            }
+            
+            if (!selectedOption) {
+                alert('種類を選択してください。');
+                return;
+            }
+
+            const year = yearSelect.value;
+            const month = monthSelect.value;
+            const data = {
+                year: year,
+                month: month,
+                dates: selectedDates,
+                type: selectedOption
+            };
+
+            // Google Apps Scriptの関数を呼び出す
+            google.script.run
+                .withSuccessHandler(function() {
+                    // 選択をリセット
+                    document.querySelectorAll('.date-item.selected').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    optionButtons.forEach(btn => btn.classList.remove('selected'));
+                    selectedOption = null;
+                })
+                .processFormData(data);
+        });
+
+        // 初期表示
+        createWeekdayHeader();
+        updateDateGrid();
+    </script>
+</body>
+</html>
