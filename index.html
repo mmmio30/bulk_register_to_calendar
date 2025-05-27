@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>カレンダー選択</title>
     <style>
+        html {
+            touch-action: manipulation;
+        }
         body {
             display: flex;
             justify-content: center;
@@ -12,6 +15,12 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
+
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
         .container {
             max-width: 600px;
