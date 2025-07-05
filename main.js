@@ -14,37 +14,25 @@ function processFormData(data) {
     // カレンダーサービスの取得
     const calendar = CalendarApp.getDefaultCalendar();
     
-    // イベントの設定
-    let title, startHour, endHour, colorId;
+    // 入力欄から値を取得（フォールバックとして規定値を使用）
+    let title = data.title || '予定';
+    let startTime = data.startTime || '00:00';
+    let endTime = data.endTime || '23:00';
+    let colorId = data.colorId || '1';
     
-    switch(type) {
-      case '1': // 休み
-        title = '休み';
-        startHour = 0;
-        endHour = 23;
-        colorId = '6'; // ミカン色
-        break;
-      case '2': // レンタカー
-        title = 'レンタカー';
-        startHour = 14;
-        endHour = 19;
-        colorId = '9'; // ブルーベリー色
-        break;
-      case '3': // 線路
-        title = '線路';
-        startHour = 22;
-        endHour = 23;
-        colorId = '9'; // ブルーベリー色
-        break;
-      default:
-        throw new Error('無効な種類が選択されました');
-    }
+    // 時間を時間と分に分割
+    const startParts = startTime.split(':');
+    const endParts = endTime.split(':');
+    const startHour = parseInt(startParts[0]);
+    const startMinute = parseInt(startParts[1]);
+    const endHour = parseInt(endParts[0]);
+    const endMinute = parseInt(endParts[1]);
     
     // 各日付に対してイベントを作成
     const createdEvents = [];
     dates.forEach(day => {
-      const startDate = new Date(year, month - 1, day, startHour, 0, 0);
-      const endDate = new Date(year, month - 1, day, endHour, 0, 0);
+      const startDate = new Date(year, month - 1, day, startHour, startMinute, 0);
+      const endDate = new Date(year, month - 1, day, endHour, endMinute, 0);
       
       const event = calendar.createEvent(
         title,

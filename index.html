@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>カレンダー選択</title>
     <style>
-        html {
-            touch-action: manipulation;
-        }
         body {
             display: flex;
             justify-content: center;
@@ -15,12 +12,6 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
-
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
         }
         .container {
             max-width: 600px;
@@ -154,6 +145,58 @@
                 opacity: 0;
             }
         }
+        .event-details {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            width: 80%;
+            box-sizing: border-box;
+        }
+        .event-details h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #333;
+            font-size: 14px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #555;
+            font-size: 12px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .color-preview {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .color-input-group {
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -173,7 +216,48 @@
                 <button class="option-button" data-type="1">休み</button>
                 <button class="option-button" data-type="2">レンタカー</button>
                 <button class="option-button" data-type="3">線路</button>
+                <button class="option-button" data-type="custom">カスタム</button>
             </div>
+            
+            <div class="event-details">
+                <h3>予定の詳細</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventTitle">タイトル</label>
+                        <input type="text" id="eventTitle" placeholder="予定のタイトルを入力">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventColor">色</label>
+                        <div class="color-input-group">
+                            <span class="color-preview" id="colorPreview"></span>
+                            <select id="eventColor">
+                                <option value="1">ラベンダー</option>
+                                <option value="2">セージ</option>
+                                <option value="3">ブドウ</option>
+                                <option value="4">フラミンゴ</option>
+                                <option value="5">バナナ</option>
+                                <option value="6">ミカン</option>
+                                <option value="7">ピーコック</option>
+                                <option value="8">グラファイト</option>
+                                <option value="9">ブルーベリー</option>
+                                <option value="10">バジル</option>
+                                <option value="11">トマト</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startTime">開始時間</label>
+                        <input type="time" id="startTime">
+                    </div>
+                    <div class="form-group">
+                        <label for="endTime">終了時間</label>
+                        <input type="time" id="endTime">
+                    </div>
+                </div>
+            </div>
+            
             <button class="submit-button" id="submitButton">送信</button>
         </div>
     </div>
@@ -282,13 +366,50 @@
         const optionButtons = document.querySelectorAll('.option-button');
         let selectedOption = null;
 
+        // 規定の設定を定義
+        const defaultSettings = {
+            '1': { title: '休み', startTime: '00:00', endTime: '23:00', color: '6' },
+            '2': { title: 'レンタカー', startTime: '10:00', endTime: '19:00', color: '9' },
+            '3': { title: '線路', startTime: '22:00', endTime: '23:00', color: '9' },
+            'custom': { title: '', startTime: '', endTime: '', color: '1' }
+        };
+
         optionButtons.forEach(button => {
             button.addEventListener('click', () => {
                 optionButtons.forEach(btn => btn.classList.remove('selected'));
                 button.classList.add('selected');
                 selectedOption = button.dataset.type;
+                
+                // 規定の値を入力欄に設定
+                const settings = defaultSettings[selectedOption];
+                if (settings) {
+                    document.getElementById('eventTitle').value = settings.title;
+                    document.getElementById('startTime').value = settings.startTime;
+                    document.getElementById('endTime').value = settings.endTime;
+                    document.getElementById('eventColor').value = settings.color;
+                    updateColorPreview();
+                }
             });
         });
+
+        // 色のプレビューを更新する関数
+        function updateColorPreview() {
+            const colorSelect = document.getElementById('eventColor');
+            const colorPreview = document.getElementById('colorPreview');
+            const colorId = colorSelect.value;
+            
+            // 色のマッピング（Google Calendarの色IDに対応）
+            const colorMap = {
+                '1': '#7986cb', '2': '#33b679', '3': '#8e63ce', '4': '#e67c73',
+                '5': '#f6c026', '6': '#f4511e', '7': '#039be5', '8': '#616161',
+                '9': '#3f51b5', '10': '#0b8043', '11': '#d60000'
+            };
+            
+            colorPreview.style.backgroundColor = colorMap[colorId] || '#ccc';
+        }
+
+        // 色選択時のプレビュー更新
+        document.getElementById('eventColor').addEventListener('change', updateColorPreview);
 
         // 送信ボタンの処理
         document.getElementById('submitButton').addEventListener('click', () => {
@@ -305,13 +426,33 @@
                 return;
             }
 
+            // 入力欄の値を取得
+            const title = document.getElementById('eventTitle').value.trim();
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const colorId = document.getElementById('eventColor').value;
+
+            if (!title) {
+                alert('タイトルを入力してください。');
+                return;
+            }
+
+            if (!startTime || !endTime) {
+                alert('開始時間と終了時間を入力してください。');
+                return;
+            }
+
             const year = yearSelect.value;
             const month = monthSelect.value;
             const data = {
                 year: year,
                 month: month,
                 dates: selectedDates,
-                type: selectedOption
+                type: selectedOption,
+                title: title,
+                startTime: startTime,
+                endTime: endTime,
+                colorId: colorId
             };
 
             // Google Apps Scriptの関数を呼び出す
@@ -323,6 +464,13 @@
                     });
                     optionButtons.forEach(btn => btn.classList.remove('selected'));
                     selectedOption = null;
+                    
+                    // 入力欄をクリア
+                    document.getElementById('eventTitle').value = '';
+                    document.getElementById('startTime').value = '';
+                    document.getElementById('endTime').value = '';
+                    document.getElementById('eventColor').value = '1';
+                    updateColorPreview();
                 })
                 .processFormData(data);
         });
@@ -330,6 +478,7 @@
         // 初期表示
         createWeekdayHeader();
         updateDateGrid();
+        updateColorPreview();
     </script>
 </body>
 </html>
